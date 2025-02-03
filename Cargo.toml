@@ -9,6 +9,6 @@ repository = "https://github.com/threelight/rustredis"
 license = "MIT"
 
 [dependencies]
-clap = "4.5.27"
+clap = { version = "4.5.27", features = ["derive"] }
 redis = "0.24"
 ctrlc = "3.4"
