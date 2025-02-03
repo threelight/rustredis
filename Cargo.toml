@@ -3,6 +3,11 @@ name = "rustredis"
 version = "0.1.0"
 edition = "2021"
 
+description = "A Redis performance testing tool written in Rust"
+homepage = "https://github.com/threelight/rustredis"
+repository = "https://github.com/threelight/rustredis"
+license = "MIT"
+
 [dependencies]
 clap = "4.5.27"
 redis = "0.24"
