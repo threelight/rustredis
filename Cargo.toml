@@ -1,0 +1,9 @@
+[package]
+name = "rustredis"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+redis = "0.24"
+ctrlc = "3.4"
