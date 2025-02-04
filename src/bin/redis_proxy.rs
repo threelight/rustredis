@@ -71,7 +71,9 @@ fn validate_json_schema(key: &str, value: &Value) -> Result<(), String> {
         jsonschema::JSONSchema::compile(schema)
             .map_err(|e| e.to_string())?
             .validate(value)
-            .map_err(|e| e.to_string())?;
+            .map_err(|errors| {
+            errors.map(|e| e.to_string()).collect::<Vec<String>>().join(", ")
+        })?;
     }
     Ok(())
 }
@@ -98,16 +100,19 @@ fn handle_request(redis_client: &mut redis::Connection, data: &str) -> String {
         let result = match req.action.as_str() {
             "set" => {
                 let val = req.value.unwrap_or(Value::Null).to_string();
-                redis_client.set(&req.key, &val).and_then(|_| redis_client.publish(&req.key, format!("set: {}", val)))
+                redis_client.set::<&str, String, ()>(&req.key, val.clone())
+                .and_then(|_| redis_client.publish::<&str, String, ()>(&req.key, format!("set: {}", val)))
             },
-            "del" => redis_client.del(&req.key),
+            "del" => redis_client.del::<&str, ()>(&req.key),
             "sadd" => {
                 let val = req.value.unwrap_or(Value::Null).to_string();
-                redis_client.sadd(&req.key, &val).and_then(|_| redis_client.publish(&req.key, format!("sadd: {}", val)))
+                redis_client.sadd::<&str, String, ()>(&req.key, val.clone())
+                    .and_then(|_| redis_client.publish::<&str, String, ()>(&req.key, format!("sadd: {}", val)))
             },
             "srem" => {
                 let val = req.value.unwrap_or(Value::Null).to_string();
-                redis_client.srem(&req.key, &val).and_then(|_| redis_client.publish(&req.key, format!("srem: {}", val)))
+                redis_client.srem::<&str, String, ()>(&req.key, val.clone())
+                    .and_then(|_| redis_client.publish::<&str, String, ()>(&req.key, format!("srem: {}", val)))
             },
             _ => return serde_json::to_string(&Response {
                 status: "error".to_string(),
