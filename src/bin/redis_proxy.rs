@@ -34,18 +34,20 @@ lazy_static! {
         m.insert("cs:DiskUsage:object1", serde_json::json!({
             "type": "object",
             "properties": {
+                "version": {"type": "number"},
                 "disk": {"type": "string"},
                 "usage": {"type": "number"}
             },
-            "required": ["disk", "usage"]
+            "required": ["version", "disk", "usage"]
         }));
         m.insert("cs:ModemWatcher:object2", serde_json::json!({
             "type": "object",
             "properties": {
+                "version": {"type": "number"},
                 "status": {"type": "string"},
                 "signal_strength": {"type": "integer"}
             },
-            "required": ["status", "signal_strength"]
+            "required": ["version", "status", "signal_strength"]
         }));
         m
     };
@@ -103,7 +105,8 @@ fn handle_request(redis_client: &mut redis::Connection, data: &str) -> String {
                 redis_client.set::<&str, String, ()>(&req.key, val.clone())
                 .and_then(|_| redis_client.publish::<&str, String, ()>(&req.key, format!("set: {}", val)))
             },
-            "del" => redis_client.del::<&str, ()>(&req.key),
+            "del" => redis_client.del::<&str, ()>(&req.key)
+                .and_then(|_| redis_client.publish::<&str, &str, ()>(&req.key, "del")),
             "sadd" => {
                 let val = req.value.unwrap_or(Value::Null).to_string();
                 redis_client.sadd::<&str, String, ()>(&req.key, val.clone())
